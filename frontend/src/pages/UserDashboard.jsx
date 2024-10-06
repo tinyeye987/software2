@@ -6,7 +6,6 @@ import StatCard from "../components/StatCard";
 import BarChart from "../components/BarChart";
 import LineChart from "../components/LineChart";
 import MarkSection from "../components/MarkSection";
-
 import SettingComponent from "../components/Settings";
 import NotificationComponent from "../components/NotificationComponent";
 import { UserContext } from "../context/UserContext";
@@ -19,6 +18,23 @@ const UserDashboard = () => {
   const [hasProject, setHasProject] = useState(false);
   const [tabName, setTabName] = useState("Dashboard");
   const [userProject, setUserProject] = useState({});
+
+  // Save project data to localStorage
+  const saveProjectToLocalStorage = (project) => {
+    localStorage.setItem("userProject", JSON.stringify(project));
+    localStorage.setItem("hasProject", true);
+  };
+
+  // Load project data from localStorage
+  const loadProjectFromLocalStorage = () => {
+    const storedProject = localStorage.getItem("userProject");
+    const storedHasProject = localStorage.getItem("hasProject");
+
+    if (storedHasProject === "true" && storedProject) {
+      setUserProject(JSON.parse(storedProject));
+      setHasProject(true);
+    }
+  };
 
   // Get the project details of the user
   const getProject = async () => {
@@ -33,11 +49,13 @@ const UserDashboard = () => {
       if (response.data.success == true) {
         console.log(response.data);
 
-        // set the projet details
+        // set the project details
         setUserProject(response.data.project);
         setProjectId(response.data.project.projectId);
-
         setHasProject(true);
+
+        // Save the project to localStorage
+        saveProjectToLocalStorage(response.data.project);
       }
     } catch (error) {
       console.log(error);
@@ -45,8 +63,15 @@ const UserDashboard = () => {
   };
 
   useEffect(() => {
-    getProject();
+    // First, check if the project is stored in localStorage
+    loadProjectFromLocalStorage();
+
+    // If not found in localStorage, fetch from the server
+    if (!hasProject) {
+      getProject();
+    }
   }, [hasProject]);
+
   return (
     <>
       <div class="sticky top-0 inset-x-0 z-20 bg-white border-y px-4 sm:px-6 lg:px-8 lg:hidden">
@@ -108,7 +133,7 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* <!-- Sidebar --> */}
+      {/* Sidebar */}
       <div
         id="hs-application-sidebar"
         class="hs-overlay  [--auto-close:lg]
@@ -133,7 +158,7 @@ const UserDashboard = () => {
             />
           </div>
 
-          {/* <!-- Content --> */}
+          {/* Content */}
           <div class="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
             <nav
               class="hs-accordion-group p-3 w-full flex flex-col flex-wrap"
@@ -224,7 +249,7 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
-      {/* <!-- End Sidebar --> */}
+      {/* End Sidebar */}
 
       <div class="w-full pt-10 px-4 sm:px-6 md:px-8 lg:ps-72">
         {tabName === "Dashboard" ? (
@@ -248,7 +273,7 @@ const UserDashboard = () => {
                 <BarChart />
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-4">
-                    Growth of Resuts
+                    Growth of Results
                   </h2>
                   <LineChart />
                 </div>
@@ -309,3 +334,5 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
+
+
